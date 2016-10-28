@@ -29,6 +29,11 @@ namespace OnDemandEncodingWithMES
         private static CloudMediaContext _context = null;
         private static MediaServicesCredentials _cachedCredentials = null;
 
+        // Static variables
+        private static string root_folder = "C:\\Users\\Karao\\0";
+        private static string text_path = "C:\\Users\\Karao\\videos.txt";
+
+
         static void Main(string[] args)
         {
             try
@@ -42,9 +47,12 @@ namespace OnDemandEncodingWithMES
 
                 // If you want to secure your high quality input media files with strong encryption at rest on disk,
                 // use AssetCreationOptions.StorageEncrypted instead of AssetCreationOptions.None.
-                string[] directories = Directory.GetDirectories("C:\\Users\\ks\\Desktop\\small");
+                string[] directories = Directory.GetDirectories(root_folder);
                 foreach (string directory in directories)
                 {
+                    System.IO.StreamWriter txtfile = File.AppendText(text_path);
+                    txtfile.WriteLine(Path.GetDirectoryName(directory));
+                    txtfile.Close();
                     string[] files = Directory.GetFiles(directory);
                     foreach (string file in files)
                     {
@@ -61,8 +69,7 @@ namespace OnDemandEncodingWithMES
                         // If your asset is AssetCreationOptions.StorageEncrypted, 
                         // make sure to call ConfigureClearAssetDeliveryPolicy defined below.
 
-                        IAsset encodedAsset =
-                            EncodeToAdaptiveBitrateMP4s(inputAsset, AssetCreationOptions.None);
+                        //IAsset encodedAsset = EncodeToAdaptiveBitrateMP4s(inputAsset, AssetCreationOptions.None);
 
                         // If your want to delivery a storage encrypted asset, 
                         // you must configure the asset’s delivery policy.
@@ -70,33 +77,9 @@ namespace OnDemandEncodingWithMES
                         // the streaming server removes the storage encryption and 
                         //streams your content using the specified delivery policy.
                         PublishAssetGetURLs(inputAsset, false);
-                        PublishAssetGetURLs(encodedAsset);
+                        //PublishAssetGetURLs(encodedAsset);
                     }   
                 }
-
-                //Console.WriteLine("Upload a file.\n");
-                //IAsset inputAsset =
-                //    UploadFile(Path.Combine(_mediaFiles, @"big_buck_bunny.mp4"), AssetCreationOptions.None);
-
-                //Console.WriteLine("Encode to adaptive bitraite MP4s and get on demand URLs.\n");
-
-                //// If you want to secure your high quality encoded media files with strong encryption at rest on disk,
-                //// use AssetCreationOptions.StorageEncrypted instead of AssetCreationOptions.None.
-                //// 
-                //// If your asset is AssetCreationOptions.StorageEncrypted, 
-                //// make sure to call ConfigureClearAssetDeliveryPolicy defined below.
-
-                //IAsset encodedAsset =
-                //    EncodeToAdaptiveBitrateMP4s(inputAsset, AssetCreationOptions.None);
-
-
-                //// If your want to delivery a storage encrypted asset, 
-                //// you must configure the asset’s delivery policy.
-                //// Before your asset can be streamed, 
-                //// the streaming server removes the storage encryption and 
-                ////streams your content using the specified delivery policy.
-                //PublishAssetGetURLs(inputAsset,false);
-                //PublishAssetGetURLs(encodedAsset);
             }
             catch (Exception exception)
             {
@@ -137,7 +120,7 @@ namespace OnDemandEncodingWithMES
                 "Media Encoder Standard",
                 "H264 Multiple Bitrate 1080p",
                 asset,
-                "Adaptive Bitrate MP4",
+                asset.Name,
                 options);
 
             Console.WriteLine("Submitting transcoding job...");
@@ -166,7 +149,7 @@ namespace OnDemandEncodingWithMES
             // Publish the output asset by creating an Origin locator for adaptive streaming,
             // and a SAS locator for progressive download.
 
-            System.IO.StreamWriter file = new System.IO.StreamWriter("c:\\Users\\ks\\Desktop\\videos.txt");
+            System.IO.StreamWriter file = File.AppendText(text_path);
 
             if (onDemaindURL)
             {
@@ -185,6 +168,7 @@ namespace OnDemandEncodingWithMES
                 // Display  the streaming URLs.
                 Console.WriteLine("Use the following URLs for adaptive streaming: ");
                 Console.WriteLine(smoothStreamingUri);
+                file.WriteLine(smoothStreamingUri);
                 //Console.WriteLine(hlsUri);
                 //Console.WriteLine(mpegDashUri);
                 Console.WriteLine();
@@ -210,7 +194,7 @@ namespace OnDemandEncodingWithMES
 
                 // Display the URLs for progressive download.
                 Console.WriteLine("Use the following URLs for progressive download.");
-                sasUris.ForEach(uri => Console.WriteLine(uri + "\n"));
+                sasUris.ForEach(uri => file.WriteLine(uri));
                 Console.WriteLine();
             }
             file.Close();
